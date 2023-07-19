@@ -44,7 +44,7 @@ class MyMap extends AbstractMap {
                 <button onClick={() => { this.moveTo(-37.78, 144.97, 14)}}>
 
                 {/** render the map container */}
-                <MapContainer center={[0, 140.7]} zoom={2} style={{ width: "700px" height: "400px"}}>
+                <MapContainer center={[0, 140.7]} zoom={2} style={{ width: "700px" height: "400px"}} whenReady={this.setMap}>
                     {/** render the OSM and allow the moveTo method */}
                     {this.renderMapInfo()}
 

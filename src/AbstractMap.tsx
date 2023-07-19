@@ -8,11 +8,10 @@ const DEFAULT_MAP_CONFIG = {
     zoom: 5,
 }
 
-const MapInfo = props => {
-    const map = useMap()
-
+const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map }) => {
+    // const map = useMap()
+    
     // determine active and inactive tile set
-    const { currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig } = props
     if (currentMapConfig.zoom === map.getZoom() && currentMapConfig.center === map.getCenter()) {
         // will not abort first time, since getCenter of map returns an object, but center of current state is a JSON to start with
         return null
@@ -70,11 +69,11 @@ const MapInfo = props => {
     return null
 }
 
-const RecenterAutomatically = ({ mapConfig, changePosition = false }) => {
+const RecenterAutomatically = ({ map, mapConfig, changePosition = false }) => {
     if (changePosition === false) {
         return null
     }
-    const map = useMap()
+    // const map = useMap()
     useEffect(() => {
         map.setView(new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom)
     }, [new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom])
@@ -95,12 +94,14 @@ class AbstractMap extends React.Component {
             currentTileset: props.currentTileset || "map",
             showCacheConfig: false,
             changePosition: false,
+            map: null, // will be set by whenReady
         }
 
         this.tilesets = []
 
         this.getStandardOsmLayer = this.getStandardOsmLayer.bind(this)
         this.setMapConfig = this.setMapConfig.bind(this)
+        this.setMap = this.setMap.bind(this)
         this.setCurrentTileset = this.setCurrentTileset.bind(this)
         this.moveTo = this.moveTo.bind(this)
         this.renderMapInfo = this.renderMapInfo.bind(this)
@@ -111,6 +112,10 @@ class AbstractMap extends React.Component {
             maxZoom,
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
         })
+    }
+
+    setMap(map) {
+        this.setState({ map: map.target })
     }
 
     setCurrentTileset(tileset) {
@@ -160,6 +165,9 @@ class AbstractMap extends React.Component {
     }
 
     renderMapInfo() {
+        if (this.state.map == null) {
+            return null
+        }
         return [
             <MapInfo
                 setMapConfig={this.setMapConfig}
@@ -169,11 +177,13 @@ class AbstractMap extends React.Component {
                 tilesets={this.tilesets}
                 minSatZoom={this.props.minSatZoom}
                 key="mapinfo"
+                map={this.state.map}
             />,
             <RecenterAutomatically
                 mapConfig={this.state.mapConfig}
                 key="recenter"
                 changePosition={this.state.changePosition}
+                map={this.state.map}
             />,
         ]
     }
