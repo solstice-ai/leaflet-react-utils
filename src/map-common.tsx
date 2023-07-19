@@ -1,10 +1,8 @@
-import L from "leaflet"
-
 const mapCommon = {
     getBounds(box) {
-        const northEast = L.latLng(box.topLeft.lat, box.bottomRight.lon)
-        const southWest = L.latLng(box.bottomRight.lat, box.topLeft.lon)
-        const bounds = L.latLngBounds(southWest, northEast)
+        const northEast = [box.topLeft.lat, box.bottomRight.lon]
+        const southWest = [box.bottomRight.lat, box.topLeft.lon]
+        const bounds = [southWest, northEast]
         return bounds
     },
     getTilesByLatLon(lat, lon, zoom = 20) {
