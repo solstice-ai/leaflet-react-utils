@@ -1,16 +1,19 @@
+import "leaflet-area-select"
 import { useEffect } from "react"
+import React from "react"
 import mapCommon from "./map-common"
 
-function AreaTileSelect(props) {
-    if (props.setBox == null) {
-        throw Error("Please provide a `setBox` property to the AreaTileSelect component")
-    }
+const AreaTileSelect = (props) => {
+    console.log("React", React === props.React)
     // default grid size to 1
     const gridRound = props.gridSize || 1
     const { map } = props
     useEffect(() => {
         if (!map.selectArea) {
             return
+        }
+        if (props.setBox == null) {
+            throw Error("Please provide a `setBox` property to the AreaTileSelect component")
         }
         map.selectArea.enable()
         map.on("areaselected", (e) => {
@@ -46,7 +49,7 @@ function AreaTileSelect(props) {
             // inform parent
             props.setBox(box)
         })
-    }, [])
+    })
 
     return null
 }

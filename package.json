@@ -1,10 +1,10 @@
 {
   "name": "@solstice-ai/leaflet-react-utils",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Useful utilities for React applications utilising Leaflet maps",
   "main": "dist/cjs/index.js",
-  "type": "module",
   "module": "dist/esm/index.js",
+  "files": ["dist"],
   "scripts": {
     "build": "rollup -c",
     "deploy": "npm run build && npm publish",
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/solstice-ai/leaflet-react-utils#readme",
   "peerDependencies": {
     "leaflet": "^1.9.4",
+    "leaflet-area-select": "^1.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1"
@@ -43,11 +44,7 @@
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.32.2",
-    "leaflet": "^1.9.4",
     "prettier": "^2.8.8",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-leaflet": "^4.2.1",
     "rollup": "^3.26.3",
     "rollup-plugin-dts": "^5.3.0",
     "tslib": "^2.6.0",
