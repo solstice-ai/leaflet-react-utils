@@ -9,8 +9,8 @@ const DEFAULT_MAP_CONFIG = {
 }
 
 const MapInfo = props => {
-    // const map = useMap()
-    const map = props.map
+    const map = useMap()
+
     // determine active and inactive tile set
     const { currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig } = props
     if (currentMapConfig.zoom === map.getZoom() && currentMapConfig.center === map.getCenter()) {
@@ -70,11 +70,11 @@ const MapInfo = props => {
     return null
 }
 
-const RecenterAutomatically = ({ map, mapConfig, changePosition = false }) => {
+const RecenterAutomatically = ({ mapConfig, changePosition = false }) => {
     if (changePosition === false) {
         return null
     }
-    // const map = useMap()
+    const map = useMap()
     useEffect(() => {
         map.setView(new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom)
     }, [new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom])
@@ -83,10 +83,10 @@ const RecenterAutomatically = ({ map, mapConfig, changePosition = false }) => {
 
 
 class AbstractMap extends React.Component {
-    constructor(props, customMapConfig = null) {
+    constructor(props) {
         super(props)
         // process map config
-        const mapConfig = customMapConfig || DEFAULT_MAP_CONFIG
+        const mapConfig = DEFAULT_MAP_CONFIG
         const updatedMapConfig = { ...mapConfig }
         updatedMapConfig.center = { lat: mapConfig.center[0], lng: mapConfig.center[1] }
         // init state
@@ -159,7 +159,7 @@ class AbstractMap extends React.Component {
         )
     }
 
-    renderMapInfo(map) {
+    renderMapInfo() {
         return [
             <MapInfo
                 setMapConfig={this.setMapConfig}
@@ -169,13 +169,11 @@ class AbstractMap extends React.Component {
                 tilesets={this.tilesets}
                 minSatZoom={this.props.minSatZoom}
                 key="mapinfo"
-                map={map}
             />,
             <RecenterAutomatically
                 mapConfig={this.state.mapConfig}
                 key="recenter"
                 changePosition={this.state.changePosition}
-                map={map}
             />,
         ]
     }

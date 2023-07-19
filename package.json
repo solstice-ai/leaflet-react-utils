@@ -1,10 +1,12 @@
 {
   "name": "@solstice-ai/leaflet-react-utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Useful utilities for React applications utilising Leaflet maps",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rollup -c",
     "deploy": "npm run build && npm publish",

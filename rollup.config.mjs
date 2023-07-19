@@ -13,22 +13,14 @@ export default [
             //     file: packageJson.main,
             //     format: "cjs",
             //     sourcemap: true,
-            //     globals: {
-            //         react: "React",
-            //         "react-dom": "ReactDom"
-            //     }
             // },
             {
                 file: packageJson.module,
                 format: "esm",
-                // sourcemap: true,
-                // globals: {
-                //     react: "React",
-                //     "react-dom": "ReactDom"
-                // },
+                sourcemap: true,
             },
         ],
-        external: ['react', 'react-router'],
+        external: ["react", "react-dom"],
         plugins: [
             resolve(),
             commonjs(),
