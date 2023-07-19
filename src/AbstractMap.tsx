@@ -1,14 +1,34 @@
 import React, { useEffect } from "react"
-import { tileLayer, LatLng } from "leaflet"
-import { useMap } from "react-leaflet"
+import { tileLayer, LatLng, Map, Layer } from "leaflet"
+import { LatLngType, MapConfigType } from "./shared-types"
+// import { useMap } from "react-leaflet"
 
 
-const DEFAULT_MAP_CONFIG = {
-    center: [-29.96, 146.139],
+const DEFAULT_MAP_CONFIG: MapConfigType = {
+    center: {
+        lat: -29.96, 
+        lng: 146.139,
+    },
     zoom: 5,
 }
 
-const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map }) => {
+interface PrivateLayerType extends Layer {
+    _url: string
+}
+interface PrivateMapType extends Map {
+    _events: any,
+}
+
+interface MapInfoProps {
+    currentTileset?: "map" | "sat",
+    currentMapConfig: MapConfigType,
+    minSatZoom: number,
+    tilesets: PrivateLayerType[]
+    setMapConfig: (zoom: number, center: LatLngType, bounds: any, minSatZoom: number) => void,
+    map: PrivateMapType
+}
+
+const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map }: MapInfoProps) => {
     // const map = useMap()
     
     // determine active and inactive tile set
@@ -36,11 +56,11 @@ const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMa
             let currentAlreadyThere = false
             let inactiveAlreadyRemoved = true
             if (tilesets.length > 0) {
-                map.eachLayer(l => {
-                    if (activeLayer != null && l._url === activeLayer._url) {
+                map.eachLayer((l: Layer) => {
+                    if (activeLayer != null && (l as PrivateLayerType)._url === activeLayer._url) {
                         currentAlreadyThere = true
                     }
-                    if (inactiveLayer != null && l._url === inactiveLayer._url) {
+                    if (inactiveLayer != null && (l as PrivateLayerType)._url === inactiveLayer._url) {
                         inactiveAlreadyRemoved = false
                     }
                 })
@@ -69,7 +89,16 @@ const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMa
     return null
 }
 
-const RecenterAutomatically = ({ map, mapConfig, changePosition = false }) => {
+export interface RecenterAutomaticallyProps { 
+    map: PrivateMapType,
+    mapConfig: {
+        zoom: number,
+        center: LatLngType,
+    },
+    changePosition?: boolean,
+}
+
+const RecenterAutomatically = ({ map, mapConfig, changePosition = false }: RecenterAutomaticallyProps) => {
     if (changePosition === false) {
         return null
     }
@@ -80,14 +109,30 @@ const RecenterAutomatically = ({ map, mapConfig, changePosition = false }) => {
     return null
 }
 
+export interface AbstractMapProps {
+    currentTileset: "map" | "sat"
+    minSatZoom: number,
+}
+export interface AbstractMapState {
+    map?: PrivateMapType | null,
+    mapConfig: MapConfigType
+    currentTileset?: "map" | "sat",
+    showCacheConfig?: boolean,
+    changePosition?: boolean,
+}
+export interface PrivateMapWrapperType {
+    target: PrivateMapType,
+}
 
-class AbstractMap extends React.Component {
-    constructor(props) {
+class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
+    
+    private tilesets: PrivateLayerType[] = []
+
+    constructor(props: AbstractMapProps) {
         super(props)
         // process map config
-        const mapConfig = DEFAULT_MAP_CONFIG
-        const updatedMapConfig = { ...mapConfig }
-        updatedMapConfig.center = { lat: mapConfig.center[0], lng: mapConfig.center[1] }
+        const updatedMapConfig: MapConfigType = { ...DEFAULT_MAP_CONFIG }
+        
         // init state
         this.state = {
             mapConfig: updatedMapConfig,
@@ -96,8 +141,6 @@ class AbstractMap extends React.Component {
             changePosition: false,
             map: null, // will be set by whenReady
         }
-
-        this.tilesets = []
 
         this.getStandardOsmLayer = this.getStandardOsmLayer.bind(this)
         this.setMapConfig = this.setMapConfig.bind(this)
@@ -114,19 +157,19 @@ class AbstractMap extends React.Component {
         })
     }
 
-    setMap(map) {
+    setMap(map: PrivateMapWrapperType) {
         this.setState({ map: map.target })
     }
 
-    setCurrentTileset(tileset) {
+    setCurrentTileset(tileset: "map" | "sat") {
         return () => {
             this.setState({ currentTileset: tileset })
         }
     }
 
-    setMapConfig(zoom, center, bounds, minSatZoom) {
+    setMapConfig(zoom: number, center: LatLngType, bounds: any, minSatZoom: number) {
         return new Promise(resolve => {
-            const stateUpdate = { mapConfig: { zoom, center, bounds } }
+            const stateUpdate: AbstractMapState = { mapConfig: { zoom, center, bounds } }
             if (minSatZoom != null && zoom < minSatZoom) {
                 // force osm map, if we zoom out too far
                 stateUpdate.currentTileset = "map"
@@ -135,16 +178,16 @@ class AbstractMap extends React.Component {
                 stateUpdate.currentTileset = "sat"
             }
             this.setState({ ...stateUpdate }, () => {
-                resolve()
+                resolve(true)
             })
         })
     }
 
-    setTilesets(tilesets) {
+    setTilesets(tilesets: PrivateLayerType[]) {
         this.tilesets = tilesets
     }
 
-    moveTo(lat, lon, zoom = null) {
+    moveTo(lat: number, lon: number, zoom: number | null = null) {
         if (zoom == null) {
             this.moveTo(lat, lon, this.state.mapConfig.zoom)
             return
@@ -173,7 +216,6 @@ class AbstractMap extends React.Component {
                 setMapConfig={this.setMapConfig}
                 currentMapConfig={this.state.mapConfig}
                 currentTileset={this.state.currentTileset}
-                setTilesets={this.setCurrentTileset}
                 tilesets={this.tilesets}
                 minSatZoom={this.props.minSatZoom}
                 key="mapinfo"

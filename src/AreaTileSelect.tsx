@@ -2,8 +2,23 @@ import "leaflet-area-select"
 import { useEffect } from "react"
 import React from "react"
 import mapCommon from "./map-common"
+import { BoxType } from "./shared-types"
+import { LeafletEvent, Map } from "leaflet"
 
-const AreaTileSelect = ({ setBox, map, gridSize }) => { 
+
+export interface SelectAreaMap extends Map {
+    selectArea?: any
+}
+export interface AreaTileSelectProps {
+    setBox: (box: BoxType) => void,
+    map: SelectAreaMap,
+    gridSize?: number,
+}
+interface AreaSelectEvent extends LeafletEvent {
+    bounds: any
+}
+
+const AreaTileSelect = ({ setBox, map, gridSize }: AreaTileSelectProps) => { 
     useEffect(() => {
         if (map == null || !map.selectArea) {
             return
@@ -13,7 +28,7 @@ const AreaTileSelect = ({ setBox, map, gridSize }) => {
         }
         map.selectArea.enable()
         map.on("areaselected", (e) => {
-            const { bounds } = e
+            const { bounds } = (e as AreaSelectEvent)
             const box = {
                 topLeft: {
                     lat: bounds._northEast.lat,

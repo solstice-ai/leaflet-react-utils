@@ -8,3 +8,7 @@ export {
     AreaTileSelect,
     mapCommon
 }
+
+export { AbstractMapProps, AbstractMapState, PrivateMapWrapperType, RecenterAutomaticallyProps } from "./AbstractMap"
+export { AreaTileSelectProps, SelectAreaMap } from "./AreaTileSelect"
+export { BoxType, LatLngType, LatLonType, MapConfigType, PolygonType, TileLocationType } from "./shared-types"
