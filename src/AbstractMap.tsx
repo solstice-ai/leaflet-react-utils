@@ -228,7 +228,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         ]
 
         if (showZoom) {
-            result.push(<ZoomInfo map={this.state.map} />)
+            result.push(<ZoomInfo key="zoominfo" map={this.state.map} />)
         }
 
         return result
