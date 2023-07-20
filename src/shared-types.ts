@@ -1,3 +1,5 @@
+import { Map } from "leaflet"
+
 export interface LatLonType {
     lat: number,
     lon: number,
@@ -27,4 +29,9 @@ export interface MapConfigType {
     zoom: number,
     center: LatLngType,
     bounds?: any,
+}
+
+
+export interface PrivateMapType extends Map {
+    _events: any,
 }

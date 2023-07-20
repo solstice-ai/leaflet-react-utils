@@ -1,6 +1,7 @@
 import React, { useEffect } from "react"
-import { tileLayer, LatLng, Map, Layer } from "leaflet"
-import { LatLngType, MapConfigType } from "./shared-types"
+import { tileLayer, LatLng, Layer } from "leaflet"
+import { LatLngType, MapConfigType, PrivateMapType } from "./shared-types"
+import ZoomInfo from "./ZoomInfo"
 // import { useMap } from "react-leaflet"
 
 
@@ -14,9 +15,6 @@ const DEFAULT_MAP_CONFIG: MapConfigType = {
 
 interface PrivateLayerType extends Layer {
     _url: string
-}
-interface PrivateMapType extends Map {
-    _events: any,
 }
 
 interface MapInfoProps {
@@ -207,11 +205,11 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         )
     }
 
-    renderMapInfo() {
+    renderMapInfo(showZoom = true) {
         if (this.state.map == null) {
             return null
         }
-        return [
+        const result = [
             <MapInfo
                 setMapConfig={this.setMapConfig}
                 currentMapConfig={this.state.mapConfig}
@@ -228,6 +226,12 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
                 map={this.state.map}
             />,
         ]
+
+        if (showZoom) {
+            result.push(<ZoomInfo map={this.state.map} />)
+        }
+
+        return result
     }
 }
 
