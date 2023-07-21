@@ -97,13 +97,12 @@ export interface RecenterAutomaticallyProps {
 }
 
 const RecenterAutomatically = ({ map, mapConfig, changePosition = false }: RecenterAutomaticallyProps) => {
-    if (changePosition === false) {
-        return null
-    }
-    // const map = useMap()
     useEffect(() => {
+        if (changePosition === false) {
+            return
+        }
         map.setView(new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom)
-    }, [new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom])
+    })
     return null
 }
 
