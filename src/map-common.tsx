@@ -1,4 +1,4 @@
-import { BoxType, LatLonType, PolygonType, TileLocationType } from "./shared-types"
+import { AreaType, BoxType, LatLonType, MapConfigType, PolygonType, PrivateMapType, TileLocationType } from "./shared-types"
 
 const mapCommon = {
     getBounds(box: BoxType): PolygonType {
@@ -78,6 +78,47 @@ const mapCommon = {
         }
         return value - diff
     },
+    getMapConfigForArea(map: PrivateMapType, area: AreaType | BoxType | LatLonType | PolygonType): MapConfigType {
+        if ((area as BoxType).topLeft != null && (area as BoxType).bottomRight != null) {
+            // convert to dummy area with box parameter
+            return this.getMapConfigForArea(map, { box: { ...area }} as AreaType)
+        }
+        if ((area as LatLonType).lat != null && (area as LatLonType).lon != null) {
+            // convert to dummy area with point parameter
+            return this.getMapConfigForArea(map, { point: { ...area } } as AreaType)
+        }
+        // TODO: detect polygon points and convert to dummy area with polygon parameter
+    
+        const { width, height } = { width: map.getSize().x, height: map.getSize().y }
+    
+        if ((area as AreaType).point != null) {
+            // area is a point of interest, default zoom level
+            return { center: (area as AreaType).point as LatLonType, zoom: 16 }
+        }
+    
+        if ((area as AreaType).box != null) {
+            // area is a box, check boundaries and see what zoom level we need
+            const [boxWidth, boxHeight] = this.getXyDimension((area as AreaType).box!.topLeft, (area as AreaType).box!.bottomRight)
+            // ratio of the box vs. the map size
+            const mainRatio = Math.min(height / boxHeight, width / boxWidth)
+            let targetzoom = 17
+            let zoomRatio = 29.44 // ratio for zoom 16 (17 above because we decrease once)
+            while (zoomRatio > mainRatio && targetzoom > 1) {
+                // half the zoom value and reduce zoom by 1
+                zoomRatio /= 2
+                targetzoom -= 1
+            }
+    
+            // determine center
+            const topLeftXy = this.getTilesByLatLon((area as AreaType).box!.topLeft.lat, (area as AreaType).box!.topLeft.lon)
+            const centerXy = { x: topLeftXy.x + Math.round(boxWidth / 2), y: topLeftXy.y + Math.round(boxHeight / 2) }
+            const center = Object.values(this.getLatLonByTiles(centerXy.x, centerXy.y))
+            return { center, zoom: targetzoom }
+        }
+    
+        // TODO: handle polygon (determine boundaries and fall back to box)
+        return { center: [0, 0], zoom: 16 }
+    }
 }
 
 export default mapCommon

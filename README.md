@@ -14,7 +14,7 @@ npm i -S @solstice-ai/leaflet-react-utils
 ```javascript
 import React from "react"
 import { MapContainer, Rectangle } from "react-leaflet"
-import { AbstractMap, AreaTileSelect, mapCommon } from "@solstice-ai/leaflet-react-utils"
+import { AbstractMap, AreaTileSelect, mapCommon, MapClick } from "@solstice-ai/leaflet-react-utils"
 
 class MyMap extends AbstractMap {
     constructor(props) {
@@ -29,12 +29,17 @@ class MyMap extends AbstractMap {
 
         this.tilesets = [this.getStandardOsmLayer()]
         this.setAreaSelect = this.setAreaSelect.bind(this)
+        this.onClick = this.onClick.bind(this)
     }
 
     setAreaSelect(box) {
         console.log("Top left", box.topLeft.lat, ",", box.topLeft.lon)
         console.log("Bottom right", box.bottomRight.lat, ",", box.bottomRight.lon)
         this.setState({ currentBox: box })
+    }
+
+    onClick(lat, lon) {
+        console.log("Clicked on point", lat, lon)
     }
 
     render() {
@@ -47,6 +52,9 @@ class MyMap extends AbstractMap {
                 <MapContainer center={[0, 140.7]} zoom={2} style={{ width: "700px" height: "400px"}} whenReady={this.setMap}>
                     {/** render the OSM and allow the moveTo method */}
                     {this.renderMapInfo()}
+
+                    {/** if we allow to click on the map and retrieve lat / lon */}
+                    <MapClick map={this.state.map} onClick={this.onClick} />
 
                     {/** if we want to select an area (ctrl + drag) */}
                     <AreaTileSelect map={this.state.map} setBox={this.setAreaSelect} />

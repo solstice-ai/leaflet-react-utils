@@ -27,11 +27,17 @@ export type LatLngType = {
 
 export interface MapConfigType {
     zoom: number,
-    center: LatLngType,
+    center: LatLngType | LatLonType | number[],
     bounds?: any,
 }
 
 
 export interface PrivateMapType extends Map {
     _events: any,
+}
+
+export interface AreaType {
+    box?: BoxType,
+    point?: LatLonType,
+    polygon?: PolygonType,
 }
