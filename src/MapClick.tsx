@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { PrivateMapType } from "./shared-types"
 
 export interface MapClickProps {
@@ -6,13 +6,27 @@ export interface MapClickProps {
     onClick: (lat: number, lon: number) => void,
 }
 
-const MapClick = ({ map, onClick }: MapClickProps) => {
-    useEffect(() => {
-        map.on("click", e => {
-            onClick(e.latlng.lat, e.latlng.lng)
+class MapClick extends React.Component<MapClickProps> {
+    constructor(props: MapClickProps) {
+        super(props)
+    }
+
+    componentWillUnmount(): void {
+        // unregister the click event
+        this.props.map._events.click = []
+    }
+
+    componentDidMount(): void {
+        // register the click event on mount
+        this.props.map.on("click", e => {
+            this.props.onClick(e.latlng.lat, e.latlng.lng)
         })
-    })
-    return null
+    }
+
+    render() {
+        return null
+    }
 }
+
 
 export default MapClick

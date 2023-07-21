@@ -5,7 +5,7 @@ const style = {
     zoom: {
         textAlign: "center" as const,
         position: "absolute" as const,
-        zIndex: "1500",
+        zIndex: "401",
         bottom: "0px",
         right: "0px",
         background: "rgba(200, 200, 200, 0.5)",

@@ -1,7 +1,7 @@
-import { AreaType, BoxType, LatLonType, MapConfigType, PolygonType, PrivateMapType, TileLocationType } from "./shared-types"
+import { AreaType, BoxType, LatLngType, LatLonType, MapConfigType, PolygonType, PrivateMapType, TileLocationType } from "./shared-types"
 
 const mapCommon = {
-    getBounds(box: BoxType): PolygonType {
+    getBounds(box: BoxType): PolygonType[] {
         const northEast = [box.topLeft.lat, box.bottomRight.lon]
         const southWest = [box.bottomRight.lat, box.topLeft.lon]
         const bounds = [southWest, northEast]
@@ -26,7 +26,7 @@ const mapCommon = {
         const brXy = this.getTilesByLatLon(bottomRight.lat, bottomRight.lon, zoom)
         return [brXy.x - tlXy.x, brXy.y - tlXy.y]
     },
-    getPolygonPoints(box: BoxType): PolygonType {
+    getPolygonPoints(box: BoxType): PolygonType[] {
         const bounds = this.getBounds(box)
         const northEast = bounds[0]
         const southWest = bounds[1]
@@ -78,22 +78,39 @@ const mapCommon = {
         }
         return value - diff
     },
-    getMapConfigForArea(map: PrivateMapType, area: AreaType | BoxType | LatLonType | PolygonType): MapConfigType {
+    getMapConfigForArea(map: PrivateMapType, area: AreaType | BoxType | LatLonType | LatLonType[] | LatLngType[] | PolygonType[], defaultZoom: number = 16): MapConfigType {
+        const defaultReturn = { center: [0, 0], zoom: defaultZoom }
         if ((area as BoxType).topLeft != null && (area as BoxType).bottomRight != null) {
             // convert to dummy area with box parameter
-            return this.getMapConfigForArea(map, { box: { ...area }} as AreaType)
+            return this.getMapConfigForArea(map, { box: { ...area }} as AreaType, defaultZoom)
         }
         if ((area as LatLonType).lat != null && (area as LatLonType).lon != null) {
             // convert to dummy area with point parameter
-            return this.getMapConfigForArea(map, { point: { ...area } } as AreaType)
+            return this.getMapConfigForArea(map, { point: { ...area } } as AreaType, defaultZoom)
         }
-        // TODO: detect polygon points and convert to dummy area with polygon parameter
+        if (Array.isArray(area)) {
+            // potentially array of coordinates
+            if (area.length === 0) {
+                // empty array
+                return defaultReturn
+            }
+            if ((area[0] as LatLonType).lat != null) {
+                // array of lat/lon values
+                const polygon = area.map(p => [(p as LatLonType).lat, (p as LatLonType).lon != null ? (p as LatLonType).lon : (p as LatLngType).lng])
+                return this.getMapConfigForArea(map, { polygon }, defaultZoom)
+            }
+            if (!Number.isNaN(area[0])) {
+                // array of [lat, lon] array values
+                return this.getMapConfigForArea(map, { polygon: (area as PolygonType[]) }, defaultZoom)
+            }
+        }
     
         const { width, height } = { width: map.getSize().x, height: map.getSize().y }
     
         if ((area as AreaType).point != null) {
             // area is a point of interest, default zoom level
-            return { center: (area as AreaType).point as LatLonType, zoom: 16 }
+            const point: LatLonType = (area as AreaType).point!
+            return { center: [point.lat, point.lon], zoom: defaultZoom }
         }
     
         if ((area as AreaType).box != null) {
@@ -115,9 +132,40 @@ const mapCommon = {
             const center = Object.values(this.getLatLonByTiles(centerXy.x, centerXy.y))
             return { center, zoom: targetzoom }
         }
-    
-        // TODO: handle polygon (determine boundaries and fall back to box)
-        return { center: [0, 0], zoom: 16 }
+
+        if ((area as AreaType).polygon != null) {
+            // we have a polygon, convert to box and call the box handler
+            const polygon = (area as AreaType).polygon
+            if (polygon!.length === 0) {
+                // empty coordinates
+                return defaultReturn
+            }
+
+            // convert to box
+            let tiles = []
+            if ((polygon![0] as LatLonType).lat != null) {
+                // provided as lat / lon
+                tiles = polygon!.map(p => this.getTilesByLatLon((p as LatLonType).lat, (p as LatLonType).lon))
+            } else {
+                // already as numbers
+                tiles = polygon!.map(p => this.getTilesByLatLon((p as PolygonType)[0], (p as PolygonType)[1]))
+            }
+            
+            // find min max of tiles
+            const minX = Math.min(...tiles.map(t => t.x))
+            const minY = Math.min(...tiles.map(t => t.y))
+            const maxX = Math.max(...tiles.map(t => t.x))
+            const maxY = Math.max(...tiles.map(t => t.y))
+
+            const box = {
+                topLeft: this.getLatLonByTiles(minX, minY),
+                bottomRight: this.getLatLonByTiles(maxX, maxY),
+            }
+            // call with box of outer boundaries
+            return this.getMapConfigForArea(map, { box }, defaultZoom)
+        }
+
+        return defaultReturn
     }
 }
 

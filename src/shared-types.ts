@@ -10,9 +10,7 @@ export interface BoxType {
     bottomRight: LatLonType,
 }
 
-export type PolygonType = {
-    [idx in number]: number[]
-}
+export type PolygonType = number[]
 
 export interface TileLocationType {
     x: number,
@@ -39,5 +37,5 @@ export interface PrivateMapType extends Map {
 export interface AreaType {
     box?: BoxType,
     point?: LatLonType,
-    polygon?: PolygonType,
+    polygon?: PolygonType[] | LatLonType[],
 }
