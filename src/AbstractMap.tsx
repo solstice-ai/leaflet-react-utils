@@ -147,7 +147,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         this.renderMapInfo = this.renderMapInfo.bind(this)
     }
 
-    getStandardOsmLayer(maxZoom = 20) {
+    getStandardOsmLayer(maxZoom = 18) {
         return tileLayer("https://a.tile.openstreetmap.de/{z}/{x}/{y}.png", {
             maxZoom,
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
