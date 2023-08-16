@@ -140,6 +140,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         }
 
         this.getStandardOsmLayer = this.getStandardOsmLayer.bind(this)
+        this.getViewBox = this.getViewBox.bind(this)
         this.setMapConfig = this.setMapConfig.bind(this)
         this.setMap = this.setMap.bind(this)
         this.setCurrentTileset = this.setCurrentTileset.bind(this)
@@ -152,6 +153,16 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
             maxZoom,
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
         })
+    }
+
+    getViewBox(asQuery: boolean = false) {
+        const bounds = this.state.mapConfig.bounds || this.state.map?.getBounds()
+        const topLeft = { lat: bounds._northEast.lat, lon: bounds._southWest.lng }
+        const bottomRight = { lat: bounds._southWest.lat, lon: bounds._northEast.lng }
+        if (asQuery === false) {
+            return { topLeft, bottomRight }
+        }
+        return { topLeft: `${topLeft.lat},${topLeft.lon}`, bottomRight: `${bottomRight.lat},${bottomRight.lon}`}
     }
 
     setMap(map: PrivateMapWrapperType) {
