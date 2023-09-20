@@ -1,7 +1,7 @@
 import React from "react"
 import { LatLonType } from "./shared-types"
 
-const WIDTH = "110px"
+const WIDTH = "115px"
 
 const style = {
     location: {
