@@ -1,8 +1,9 @@
 import React, { useEffect } from "react"
 import { tileLayer, LatLng, Layer } from "leaflet"
-import { LatLngType, MapConfigType, PrivateMapType } from "./shared-types"
+import { LatLngType, LatLonType, MapConfigType, PrivateMapType } from "./shared-types"
 import ZoomInfo from "./ZoomInfo"
-// import { useMap } from "react-leaflet"
+import LocationInfo from "./LocationInfo"
+import MapCursorMove from "./MapCursorMove"
 
 
 const DEFAULT_MAP_CONFIG: MapConfigType = {
@@ -24,6 +25,18 @@ interface MapInfoProps {
     tilesets: PrivateLayerType[]
     setMapConfig: (zoom: number, center: LatLngType, bounds: any, minSatZoom: number) => void,
     map: PrivateMapType
+}
+
+const style = {
+    bottomRightCorner: {
+        display: "flex",
+        flexDirection: "row-reverse" as const, // from right to left
+        position: "absolute" as const,
+        zIndex: "401",
+        bottom: "0px",
+        right: "0px",
+        background: "rgba(200, 200, 200, 0.5)",
+    }
 }
 
 const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map }: MapInfoProps) => {
@@ -91,7 +104,7 @@ export interface RecenterAutomaticallyProps {
     map: PrivateMapType,
     mapConfig: {
         zoom: number,
-        center: LatLngType,
+        center: LatLngType | LatLonType | number[],
     },
     changePosition?: boolean,
 }
@@ -101,7 +114,7 @@ const RecenterAutomatically = ({ map, mapConfig, changePosition = false }: Recen
         if (changePosition === false) {
             return
         }
-        map.setView(new LatLng(mapConfig.center.lat, mapConfig.center.lng), mapConfig.zoom)
+        map.setView(new LatLng((mapConfig.center as LatLngType).lat, (mapConfig.center as LatLngType).lng), mapConfig.zoom)
     })
     return null
 }
@@ -116,6 +129,7 @@ export interface AbstractMapState {
     currentTileset?: "map" | "sat",
     showCacheConfig?: boolean,
     changePosition?: boolean,
+    cursorPosition?: LatLonType | null,
 }
 export interface PrivateMapWrapperType {
     target: PrivateMapType,
@@ -137,11 +151,13 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
             showCacheConfig: false,
             changePosition: false,
             map: null, // will be set by whenReady
+            cursorPosition: null,
         }
 
         this.getStandardOsmLayer = this.getStandardOsmLayer.bind(this)
         this.getViewBox = this.getViewBox.bind(this)
         this.setMapConfig = this.setMapConfig.bind(this)
+        this.setCursorPosition = this.setCursorPosition.bind(this)
         this.setMap = this.setMap.bind(this)
         this.setCurrentTileset = this.setCurrentTileset.bind(this)
         this.moveTo = this.moveTo.bind(this)
@@ -167,6 +183,10 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
 
     setMap(map: PrivateMapWrapperType) {
         this.setState({ map: map.target })
+    }
+
+    setCursorPosition(lat: number, lon: number) {
+        this.setState({ cursorPosition: {  lat, lon }})
     }
 
     setCurrentTileset(tileset: "map" | "sat") {
@@ -215,8 +235,9 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         )
     }
 
-    renderMapInfo(showZoom = true) {
+    renderMapInfo(showZoom = true, showLocation = true) {
         if (this.state.map == null) {
+            console.warn("Map not set in state. Did you forget the whenReady call?")
             return null
         }
         const result = [
@@ -237,8 +258,23 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
             />,
         ]
 
-        if (showZoom) {
-            result.push(<ZoomInfo key="zoominfo" map={this.state.map} />)
+        if (showZoom || showLocation) {
+            result.push(
+                <div style={style.bottomRightCorner} key="zoominfo">
+                    {showZoom === true ? (
+                        <ZoomInfo map={this.state.map} embedded />
+                    ) : null}
+                    {showLocation === true ? (
+                        <LocationInfo location={this.state.cursorPosition} embedded />
+                    ) : null}
+                </div>
+            )
+
+            if (showLocation === true) {
+                result.push(
+                    <MapCursorMove map={this.state.map} onMove={this.setCursorPosition} key="cursormove" />
+                )
+            }            
         }
 
         return result
@@ -246,3 +282,4 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
 }
 
 export default AbstractMap
+

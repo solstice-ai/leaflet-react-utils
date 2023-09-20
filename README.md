@@ -73,3 +73,7 @@ class MyMap extends AbstractMap {
     }
 }
 ```
+
+The `this.renderMapInfo` call takes 2 boolean parameters, which by default both are `true`:
+- `showZoom` - indicates whether to show the zoom level in the bottom right corner
+- `showLocation` - indicates whether to show the current lat/lon of the cursor position in the bottom right corner
