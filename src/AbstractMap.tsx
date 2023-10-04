@@ -182,7 +182,13 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
     }
 
     setMap(map: PrivateMapWrapperType) {
-        this.setState({ map: map.target })
+        this.setState({ map: map.target }, () => {
+            this.moveTo(
+                (this.state.mapConfig.center as LatLngType).lat, 
+                (this.state.mapConfig.center as LatLngType).lng, 
+                this.state.mapConfig.zoom
+            )
+        })
     }
 
     setCursorPosition(lat: number, lon: number) {
