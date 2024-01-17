@@ -22,9 +22,10 @@ interface MapInfoProps {
     currentTileset?: "map" | "sat",
     currentMapConfig: MapConfigType,
     minSatZoom: number,
-    tilesets: PrivateLayerType[]
+    tilesets: PrivateLayerType[],
     setMapConfig: (zoom: number, center: LatLngType, bounds: any, minSatZoom: number) => void,
-    map: PrivateMapType
+    map: PrivateMapType,
+    autoSwitch: boolean,
 }
 
 const style = {
@@ -39,7 +40,7 @@ const style = {
     }
 }
 
-const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map }: MapInfoProps) => {
+const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMapConfig, map, autoSwitch }: MapInfoProps) => {
     // const map = useMap()
     
     // determine active and inactive tile set
@@ -48,7 +49,7 @@ const MapInfo = ({ currentTileset, currentMapConfig, minSatZoom, tilesets, setMa
         return null
     }
 
-    if (currentTileset != null) {
+    if (currentTileset != null && autoSwitch === true) {
         // only execute this part, if currentTileset is provided, otherwise we just have a simple map
         // create tile map of sat and osm layer/tileset
         const osmLayers = tilesets.filter(ts => ts._url.includes("openstreetmap") || ts._url.includes("osm"))
@@ -130,6 +131,7 @@ export interface AbstractMapState {
     showCacheConfig?: boolean,
     changePosition?: boolean,
     cursorPosition?: LatLonType | null,
+    autoSwitch?: boolean,
 }
 export interface PrivateMapWrapperType {
     target: PrivateMapType,
@@ -152,6 +154,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
             changePosition: false,
             map: null, // will be set by whenReady
             cursorPosition: null,
+            autoSwitch: true,
         }
 
         this.getStandardOsmLayer = this.getStandardOsmLayer.bind(this)
@@ -204,13 +207,16 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
     setMapConfig(zoom: number, center: LatLngType, bounds: any, minSatZoom: number) {
         return new Promise(resolve => {
             const stateUpdate: AbstractMapState = { mapConfig: { zoom, center, bounds } }
-            if (minSatZoom != null && zoom < minSatZoom) {
-                // force osm map, if we zoom out too far
-                stateUpdate.currentTileset = "map"
-            } else if (zoom > 18) {
-                // osm stops at 18, if we are zoomed in too much, force the sat view
-                stateUpdate.currentTileset = "sat"
+            if (this.state.autoSwitch === true) {
+                if (minSatZoom != null && zoom < minSatZoom) {
+                    // force osm map, if we zoom out too far
+                    stateUpdate.currentTileset = "map"
+                } else if (zoom > 18) {
+                    // osm stops at 18, if we are zoomed in too much, force the sat view
+                    stateUpdate.currentTileset = "sat"
+                }
             }
+            
             this.setState({ ...stateUpdate }, () => {
                 resolve(true)
             })
@@ -241,7 +247,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
         )
     }
 
-    renderMapInfo(showZoom = true, showLocation = true) {
+    renderMapInfo(showZoom = true, showLocation = true, autoSwitch = true) {
         if (this.state.map == null) {
             console.warn("Map not set in state. Did you forget the whenReady call?")
             return null
@@ -255,6 +261,7 @@ class AbstractMap extends React.Component<AbstractMapProps, AbstractMapState> {
                 minSatZoom={this.props.minSatZoom}
                 key="mapinfo"
                 map={this.state.map}
+                autoSwitch={autoSwitch}
             />,
             <RecenterAutomatically
                 mapConfig={this.state.mapConfig}
